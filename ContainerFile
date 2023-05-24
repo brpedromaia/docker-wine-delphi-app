@@ -1,0 +1,25 @@
+FROM brpedromaia/openbox-vnc-lightweight:v7-i386
+    
+ENV WINE_VERSION="7.21-r0" \
+    WINE_MONO_VERSION=7.4.0 \ 
+    WINE_GECKO_VERSION=2.47.3 \
+    WINETRICKS_VERSION=20230212
+
+WORKDIR /tmp/wine/
+COPY --chmod=0777 container-scripts/* /tmp/wine/
+
+RUN mkdir -p ${HOME}/.cache/wine/ ;\
+    apk update; \
+    apk add --no-cache --virtual .deps curl wget cabextract xdotool ;\
+    curl -sL https://github.com/Winetricks/winetricks/archive/refs/tags/${WINETRICKS_VERSION}.tar.gz | tar -zx -C /tmp/wine/ ;\
+    curl -sLo ${HOME}/.cache/wine/wine-mono-${WINE_MONO_VERSION}-x86.msi https://dl.winehq.org/wine/wine-mono/${WINE_MONO_VERSION}/wine-mono-${WINE_MONO_VERSION}-x86.msi ;\
+    curl -sLo /tmp/wine/wine-gecko-${WINE_GECKO_VERSION}-x86.msi https://dl.winehq.org/wine/wine-gecko/${WINE_GECKO_VERSION}/wine-gecko-${WINE_GECKO_VERSION}-x86.msi ;\
+    cp /tmp/wine/winetricks-${WINETRICKS_VERSION}/src/winetricks /usr/bin/ && chmod +x /usr/bin/winetricks ;\
+    cp /tmp/wine/winerun /usr/bin/ ;\
+    cp /tmp/wine/wine_create_shortcut.vbs ${HOME}/.wine/drive_c/ ;\ 
+    apk add --no-cache samba-winbind wine=${WINE_VERSION}  ;\
+    winetricks winxp ;\
+    wine msiexec /i "/tmp/wine/wine-gecko-${WINE_GECKO_VERSION}-x86.msi" ;\
+    /tmp/wine/wine_delphi_setup.sh ;\
+    apk del .deps tint2;\
+    rm -rf /var/cache/apk/* /tmp/wine ${HOME}/.cache /sbin/halt /sbin/poweroff /sbin/reboot 

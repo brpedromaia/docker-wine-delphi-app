@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+for APP_WIN_FULLPATH in "$@"; do
+
+  FOLDER_NAME=`echo "$APP_WIN_FULLPATH"| cut -d "/" -f2`
+  APP_NAME=`echo $APP_WIN_FULLPATH | rev | cut -d "/" -f1 | cut -d "." -f2 |rev`
+  ln -sf /wine/$FOLDER_NAME ${HOME}/.wine/drive_c/
+  [ ! -z "$WINE_DESKTOP" ] && wine wscript c:/wine_create_shortcut.vbs $APP_WIN_FULLPATH c:/users/Public/Desktop/$APP_NAME.lnk
+  [ -z "$WINE_APP" ] && export WINE_APP="$APP_WIN_FULLPATH"
+
+done
+
+if [ ! -z "$WINE_DESKTOP" ]; then
+
+  winetricks windowmanagermanaged=n vd=${SCREEN_RESOLUTION} 
+  wine explorer /desktop=on4b_desktop,${SCREEN_RESOLUTION} cmd
+
+else
+
+  wine $WINE_APP
+  
+fi
